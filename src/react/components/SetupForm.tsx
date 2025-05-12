@@ -31,6 +31,10 @@ import {
   DialogTitle,
 } from "./Dialog";
 
+import { useStore } from "@nanostores/react";
+import { isSetupOpen } from "src/stores/setup-store";
+import { Switch } from "./Switch";
+
 const BASE_LINK = (env: "dev" | "uat" | "prod") => {
   return `https://concentrixcx.azureedge.net/${env}/react-module/gaia/index.js`;
 };
@@ -42,36 +46,45 @@ const FormSchema = z.object({
   cdnlink: z.string().min(2, {
     message: "CDN link must be at least 2 characters.",
   }),
+  isDebug: z.boolean(),
 });
 
 export function SetupForm() {
+  const $isSetupOpen = useStore(isSetupOpen);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       apiKey: "",
       cdnlink: "",
+      isDebug: false,
     },
   });
 
+  function createSessionStorage(data: z.infer<typeof FormSchema>) {
+    sessionStorage.setItem("embeddedsurvey-config", JSON.stringify(data));
+  }
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data);
+    createSessionStorage(data);
+    window.location.href = "/embedded-survey-playground/apps";
   }
 
   return (
-    <Dialog open={true} onOpenChange={() => {}}>
+    <Dialog open={$isSetupOpen} onOpenChange={() => isSetupOpen.set(false)}>
       <DialogPortal>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Share link</DialogTitle>
+            <DialogTitle>Setup</DialogTitle>
             <DialogDescription>
-              Anyone who has this link will be able to view this.
+              This is the setup form for the application. Please fill in the
+              details below to get started.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center">
+          <div className="flex items-center space-x-2">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="w-2/3 space-y-6"
+                className="w-full space-y-2"
               >
                 <FormField
                   control={form.control}
@@ -119,7 +132,27 @@ export function SetupForm() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit">Submit</Button>
+                <FormField
+                  control={form.control}
+                  name="isDebug"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>Enable Debug</FormLabel>
+                        <FormDescription>
+                          Enable debug mode for the embedded SDK.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit">Load</Button>
               </form>
             </Form>
           </div>
