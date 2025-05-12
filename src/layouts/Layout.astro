@@ -9,6 +9,25 @@ import "../styles/global.css";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>Astro Basics</title>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const base_path = "/embedded-survey-playground";
+        console.log("Script loaded and DOMContentLoaded event fired.");
+        const sessionItem = sessionStorage.getItem("embeddedsurvey-config");
+        console.log("Session storage item:", sessionItem);
+        const currentPath = window.location.pathname;
+        console.log("Current path:", currentPath);
+
+        if (!sessionItem) {
+          if (currentPath.startsWith(`${base_path}/apps`)) {
+            console.log("Redirecting to home page...");
+            window.location.href = `${base_path}/`;
+          }
+        } else {
+          console.log("Session item exists, proceeding with the application.");
+        }
+      });
+    </script>
   </head>
   <body>
     <slot />
