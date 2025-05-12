@@ -21,15 +21,31 @@ export const FloatingDock = ({
   items,
   desktopClassName,
   mobileClassName,
+  onClick,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: {
+    title: string;
+    icon: React.ReactNode;
+    href?: string;
+    onClick?: () => void;
+    on?: boolean;
+  }[];
   desktopClassName?: string;
   mobileClassName?: string;
+  onClick?: () => void;
 }) => {
   return (
     <>
-      <FloatingDockDesktop items={items} className={desktopClassName} />
-      <FloatingDockMobile items={items} className={mobileClassName} />
+      <FloatingDockDesktop
+        items={items}
+        className={desktopClassName}
+        onClick={onClick}
+      />
+      <FloatingDockMobile
+        items={items}
+        className={mobileClassName}
+        onClick={onClick}
+      />
     </>
   );
 };
@@ -37,9 +53,17 @@ export const FloatingDock = ({
 const FloatingDockMobile = ({
   items,
   className,
+  onClick,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: {
+    title: string;
+    icon: React.ReactNode;
+    href?: string;
+    onClick?: () => void;
+    on?: boolean;
+  }[];
   className?: string;
+  onClick?: () => void;
 }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -70,7 +94,10 @@ const FloatingDockMobile = ({
                 <a
                   href={item.href}
                   key={item.title}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 dark:bg-neutral-900"
+                  onClick={item.onClick}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    item.on ? "bg-blue-500" : "bg-gray-50"
+                  } dark:bg-neutral-900`}
                 >
                   <div className="h-4 w-4">{item.icon}</div>
                 </a>
@@ -92,9 +119,17 @@ const FloatingDockMobile = ({
 const FloatingDockDesktop = ({
   items,
   className,
+  onClick,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: {
+    title: string;
+    icon: React.ReactNode;
+    href?: string;
+    onClick?: () => void;
+    on?: boolean;
+  }[];
   className?: string;
+  onClick?: () => void;
 }) => {
   let mouseX = useMotionValue(Infinity);
   return (
@@ -118,11 +153,15 @@ function IconContainer({
   title,
   icon,
   href,
+  onClick,
+  on,
 }: {
   mouseX: MotionValue;
   title: string;
   icon: React.ReactNode;
-  href: string;
+  href?: string;
+  onClick?: () => void;
+  on?: boolean;
 }) {
   let ref = useRef<HTMLDivElement>(null);
 
@@ -167,13 +206,15 @@ function IconContainer({
   const [hovered, setHovered] = useState(false);
 
   return (
-    <a href={href}>
+    <a href={href} onClick={onClick}>
       <motion.div
         ref={ref}
         style={{ width, height }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="relative flex aspect-square items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-800"
+        className={`relative flex aspect-square items-center justify-center rounded-full ${
+          on ? "bg-blue-500" : "bg-gray-200"
+        } dark:bg-neutral-800`}
       >
         <AnimatePresence>
           {hovered && (

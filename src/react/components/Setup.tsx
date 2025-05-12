@@ -3,15 +3,22 @@ import { FloatingDock } from "./FloatingDock";
 import { Home, Settings, Terminal } from "lucide-react";
 import { time } from "motion";
 import { title } from "motion/react-client";
+import { ModeToggle } from "./ModeToggle";
 
 const Setup = () => {
+  const clearLocalandSessionStorage = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log("Local and session storage cleared");
+    window.location.reload();
+  };
   const links = [
     {
       title: "Settings",
       icon: (
         <Settings className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "#",
+      onClick: () => console.log("Settings"),
     },
 
     {
@@ -19,15 +26,19 @@ const Setup = () => {
       icon: (
         <Home className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "#",
+      href: "/embedded-survey-playground",
     },
 
     {
-      title: "Products",
+      title: "Clear Storage",
       icon: (
         <Terminal className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "#",
+      onClick: () => clearLocalandSessionStorage(),
+    },
+    {
+      title: "Mode",
+      icon: <ModeToggle />,
     },
   ];
   return (

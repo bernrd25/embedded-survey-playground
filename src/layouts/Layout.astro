@@ -1,5 +1,8 @@
 ---
+import { SetupForm } from "@rc-components/SetupForm";
 import "../styles/global.css";
+
+let isOpen = true;
 ---
 
 <html lang="en">
@@ -10,6 +13,8 @@ import "../styles/global.css";
     <meta name="generator" content={Astro.generator} />
     <title>Astro Basics</title>
     <script>
+      import { isSetupOpen } from "../stores/setup-store";
+
       document.addEventListener("DOMContentLoaded", () => {
         const base_path = "/embedded-survey-playground";
         console.log("Script loaded and DOMContentLoaded event fired.");
@@ -23,6 +28,7 @@ import "../styles/global.css";
             console.log("Redirecting to home page...");
             window.location.href = `${base_path}/`;
           }
+          isSetupOpen.set(true);
         } else {
           console.log("Session item exists, proceeding with the application.");
         }
@@ -30,6 +36,7 @@ import "../styles/global.css";
     </script>
   </head>
   <body>
+    <SetupForm client:load />
     <slot />
   </body>
 </html>
