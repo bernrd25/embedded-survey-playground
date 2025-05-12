@@ -11,7 +11,7 @@ const Setup = () => {
       icon: (
         <Settings className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "#",
+      onClick: () => console.log("Settings"),
     },
 
     {
@@ -20,6 +20,7 @@ const Setup = () => {
         <Home className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "#",
+      onClick: () => console.log("Home"),
     },
 
     {
@@ -28,6 +29,7 @@ const Setup = () => {
         <Terminal className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "#",
+      onClick: () => console.log("Products"),
     },
   ];
   return (
