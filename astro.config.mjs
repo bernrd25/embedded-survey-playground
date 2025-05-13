@@ -8,7 +8,7 @@ import react from "@astrojs/react";
 // https://astro.build/config
 export default defineConfig({
   prefetch: {
-     prefetchAll: false
+     prefetchAll: true
   },
   site: "https://bernrd25.github.io",
   base: "embedded-survey-playground",
