@@ -17,14 +17,14 @@ import Setup from "@rc-components/Setup";
     <title>Embedded Survey Playground</title>
     <script>
       import { isSetupOpen } from "../stores/setup-store";
+      import { scriptInjector } from "../lib/scriptInjector";
 
       document.addEventListener("DOMContentLoaded", () => {
         const base_path = "/embedded-survey-playground";
-        console.log("Script loaded and DOMContentLoaded event fired.");
+
         const sessionItem = sessionStorage.getItem("embeddedsurvey-config");
-        console.log("Session storage item:", sessionItem);
+
         const currentPath = window.location.pathname;
-        console.log("Current path:", currentPath);
 
         if (!sessionItem) {
           if (currentPath.startsWith(`${base_path}/apps`)) {
@@ -33,7 +33,14 @@ import Setup from "@rc-components/Setup";
           }
           isSetupOpen.set(true);
         } else {
-          console.log("Session item exists, proceeding with the application.");
+          console.log("Session item found, proceeding with setup...");
+          const parsesdItem: {
+            apiKey: string;
+            cdnlink: string;
+            isDebug: boolean;
+          } = JSON.parse(sessionItem);
+
+          scriptInjector(parsesdItem);
         }
       });
     </script>
@@ -41,7 +48,7 @@ import Setup from "@rc-components/Setup";
   <body>
     <SidebarProvider client:load>
       <AppSidebar client:load />
-      <SidebarInset client:load>
+      <SidebarInset>
         <header
           class="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear"
         >

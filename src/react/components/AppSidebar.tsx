@@ -10,6 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./Sidebar";
+import { useEffect } from "react";
+import { scriptInjector } from "@lib/scriptInjector";
 
 // Menu items.
 const items = [
