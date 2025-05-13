@@ -1,8 +1,11 @@
 ---
-import { SetupForm } from "@rc-components/SetupForm";
+import { SidebarProvider, SidebarTrigger } from "@rc-components/Sidebar";
 import "../styles/global.css";
-
-let isOpen = true;
+import { AppSidebar } from "@rc-components/AppSidebar";
+import type { loadRenderers } from "astro:container";
+import { Separator } from "@rc-components/Separator";
+import { SidebarInset } from "@rc-components/Sidebar";
+import Setup from "@rc-components/Setup";
 ---
 
 <html lang="en">
@@ -36,7 +39,24 @@ let isOpen = true;
     </script>
   </head>
   <body>
-    <SetupForm client:load />
-    <slot />
+    <SidebarProvider client:load>
+      <AppSidebar client:load />
+      <SidebarInset client:load>
+        <header
+          class="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear"
+        >
+          <div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
+            <SidebarTrigger className="-ml-1" client:load />
+            <Separator
+              orientation="vertical"
+              className="mx-2 data-[orientation=vertical]:h-4"
+            />
+            <h1 class="text-base font-medium">Documents</h1>
+          </div>
+        </header>
+        <slot />
+        <Setup client:load />
+      </SidebarInset>
+    </SidebarProvider>
   </body>
 </html>
