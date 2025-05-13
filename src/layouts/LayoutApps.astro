@@ -6,6 +6,7 @@ import type { loadRenderers } from "astro:container";
 import { Separator } from "@rc-components/Separator";
 import { SidebarInset } from "@rc-components/Sidebar";
 import Setup from "@rc-components/Setup";
+import ClientRouter from "astro/components/ClientRouter.astro";
 ---
 
 <html lang="en">
@@ -66,4 +67,5 @@ import Setup from "@rc-components/Setup";
       </SidebarInset>
     </SidebarProvider>
   </body>
+  <ClientRouter />
 </html>
