@@ -142,14 +142,17 @@ export const useEmbeddedInfo = create<EmbeddedInfoState>((set) => ({
     set(() => {
       const temp: Array<Config> = [];
       const ls = Object.keys(localStorage);
-      ls.forEach((key) => {
-        const value = localStorage.getItem(key);
-        if (value) {
-          const JSONvalue = JSON.parse(value);
+      if (ls) {
+        ls.forEach((key) => {
+          const value = localStorage.getItem(key);
+          if (value) {
+            const JSONvalue = JSON.parse(value);
 
-          temp.push(JSONvalue);
-        }
-      });
-      return { info: temp };
+            temp.push(JSONvalue);
+          }
+        });
+        return { info: temp };
+      }
+      return { info: [] };
     }),
 }));
