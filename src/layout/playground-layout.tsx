@@ -27,7 +27,7 @@ import { Button } from "../components/Button";
 import { MAIN_ROUTES, SURVEY_TEMPLATES, RESOURCES } from "../routes";
 
 import { scriptInjector } from "../lib/scriptInjector";
-import { useEmbeddedInfo, useTheme } from "../store";
+import { useEmbeddedInfo, useTheme, type Config } from "../store";
 import { Popover, PopoverTrigger } from "../components/Popover";
 import { PopoverContent } from "@radix-ui/react-popover";
 import { Label } from "../components/Label";
@@ -296,6 +296,25 @@ const PlaygroundLayout = () => {
     window.location.href = "/";
   };
 
+  const handleSetInfo = () => {
+    const temp: Array<Config> = [];
+    const ls = Object.keys(localStorage);
+    if (ls) {
+      ls.forEach((key) => {
+        const value = localStorage.getItem(key);
+        if (value) {
+          const JSONvalue = JSON.parse(value);
+
+          temp.push(JSONvalue);
+        }
+      });
+
+      setInfo(temp);
+    }
+  };
+
+  console.log("info", info);
+
   return (
     <div>
       <Navigation />
@@ -304,7 +323,7 @@ const PlaygroundLayout = () => {
       </main>
       <div className="fixed bottom-2 left-2 md:bottom-4 md:left-4 lg:bottom-8 lg:left-8 z-50">
         <Popover>
-          <PopoverTrigger onClick={() => setInfo()}>
+          <PopoverTrigger onClick={() => handleSetInfo()}>
             <Info className="w-6 h-6 text-foreground hover:text-primary cursor-pointer" />
             <span className="sr-only">Info</span>
           </PopoverTrigger>
@@ -315,7 +334,7 @@ const PlaygroundLayout = () => {
                   <h4 className="leading-none font-medium">Embedded Info</h4>
                   <RefreshCcw
                     className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer"
-                    onClick={() => setInfo()}
+                    onClick={() => handleSetInfo()}
                   />
                 </div>
 

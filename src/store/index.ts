@@ -133,26 +133,13 @@ export type Config = {
 
 interface EmbeddedInfoState {
   info: Array<Config>;
-  setInfo: () => void;
+  setInfo: (info: Array<Config>) => void;
 }
 
 export const useEmbeddedInfo = create<EmbeddedInfoState>((set) => ({
   info: [],
-  setInfo: () =>
-    set(() => {
-      const temp: Array<Config> = [];
-      const ls = Object.keys(localStorage);
-      if (ls) {
-        ls.forEach((key) => {
-          const value = localStorage.getItem(key);
-          if (value) {
-            const JSONvalue = JSON.parse(value);
-
-            temp.push(JSONvalue);
-          }
-        });
-        return { info: temp };
-      }
-      return { info: [] };
+  setInfo: (info: Array<Config>) =>
+    set({
+      info,
     }),
 }));
