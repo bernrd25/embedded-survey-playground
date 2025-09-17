@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -24,6 +24,7 @@ import {
 import { Button } from "../components/Button";
 import { MAIN_ROUTES, SURVEY_TEMPLATES, RESOURCES } from "../routes";
 import { create } from "zustand";
+import { scriptInjector } from "../lib/scriptInjector";
 
 interface ThemeState {
   theme: "theme-light" | "dark" | "system";
@@ -105,20 +106,18 @@ function CoolNavigation() {
                   <NavigationMenuContent>
                     <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
                       <li className="row-span-3">
-                        <NavigationMenuLink asChild>
-                          <NavLink
-                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                            to={MAIN_ROUTES.GETTING_STARTED}
-                          >
-                            <BarChart3 className="h-6 w-6" />
-                            <div className="mb-2 mt-4 text-lg font-medium">
-                              Getting Started
-                            </div>
-                            <p className="text-sm leading-tight text-muted-foreground">
-                              Learn how to create your first survey and start
-                              collecting responses in minutes.
-                            </p>
-                          </NavLink>
+                        <NavigationMenuLink
+                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                          href={MAIN_ROUTES.GETTING_STARTED}
+                        >
+                          <BarChart3 className="h-6 w-6" />
+                          <div className="mb-2 mt-4 text-lg font-medium">
+                            Getting Started
+                          </div>
+                          <p className="text-sm leading-tight text-muted-foreground">
+                            Learn how to create your first survey and start
+                            collecting responses in minutes.
+                          </p>
                         </NavigationMenuLink>
                       </li>
                       {RESOURCES.map((resource) => (
@@ -231,16 +230,14 @@ function ListItem({
 }: React.ComponentPropsWithoutRef<"li"> & { href: string }) {
   return (
     <li {...props}>
-      <NavigationMenuLink asChild>
-        <NavLink
-          to={href}
-          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </NavLink>
+      <NavigationMenuLink
+        href={href}
+        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+      >
+        <div className="text-sm font-medium leading-none">{title}</div>
+        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+          {children}
+        </p>
       </NavigationMenuLink>
     </li>
   );
@@ -248,6 +245,7 @@ function ListItem({
 
 const PlaygroundLayout = () => {
   const { theme, setTheme } = useTheme();
+
   useEffect(() => {
     const isDarkMode = document.documentElement.classList.contains("dark");
     setTheme(isDarkMode ? "dark" : "theme-light");
@@ -264,11 +262,35 @@ const PlaygroundLayout = () => {
   const themeStateMachine = (theme: "theme-light" | "dark" | "system") => {
     setTheme(theme);
   };
-  const session = sessionStorage.getItem("embeddedsurvey-config");
-  if (!session) {
+  const session = JSON.parse(
+    sessionStorage.getItem("embeddedsurvey-config") || "{}"
+  );
+
+  const sessionCB = useCallback(() => {
+    scriptInjector(session);
+  }, []);
+
+  useEffect(() => {
+    sessionCB();
+  }, []);
+
+  if (session && Object.keys(session).length === 0) {
     window.location.href = "/";
     return null;
   }
+
+  const handleResetToHome = () => {
+    sessionStorage.removeItem("embeddedsurvey-config");
+    sessionStorage.removeItem("isInitialized");
+    //list localStorage.clear();
+    const ls = Object.keys(localStorage);
+    ls.forEach((key) => {
+      if (key.startsWith("CXGAIA") || key.startsWith("survey-")) {
+        localStorage.removeItem(key);
+      }
+    });
+    window.location.href = "/";
+  };
   return (
     <div>
       <CoolNavigation />
@@ -290,11 +312,12 @@ const PlaygroundLayout = () => {
             <Monitor className="w-4 h-4" />
           )}
         </Button>
-        <Button>
+        <Button
+          onClick={handleResetToHome}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6 py-2 transition-all duration-200 "
+        >
           <Home className="w-4 h-4" />
-          <NavLink to="/" className="ml-2">
-            Home
-          </NavLink>
+          <span className="sr-only">Home</span>
         </Button>
       </div>
     </div>
