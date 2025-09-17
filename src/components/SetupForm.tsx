@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { useIsSetup } from "../store";
 import {
   Dialog,
@@ -29,8 +29,12 @@ import {
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { Switch } from "./Switch";
+import { Plus, X } from "lucide-react";
+import { ScrollArea } from "./ScrollArea";
+import { toast } from "sonner";
 
 const FormSchema = z.object({
+  targetApi: z.string(),
   apiKey: z.string().min(2, {
     message: "API key must be at least 2 characters.",
   }),
@@ -38,6 +42,14 @@ const FormSchema = z.object({
     message: "CDN link must be at least 2 characters.",
   }),
   isDebug: z.boolean(),
+  targetAttributes: z
+    .array(
+      z.object({
+        key: z.string().min(1, { message: "Key is required" }),
+        value: z.string().min(1, { message: "Value is required" }),
+      })
+    )
+    .optional(),
 });
 
 const BASE_LINK = (env: "dev" | "uat" | "prod") => {
@@ -80,13 +92,21 @@ function getLocalEmbeddedAsset() {
 
 export default function SetupForm() {
   const { isSetup, setIsSetup } = useIsSetup();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      targetApi: "v1",
       apiKey: "",
       cdnlink: "",
       isDebug: true,
+      targetAttributes: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "targetAttributes",
   });
 
   function createSessionStorage(data: z.infer<typeof FormSchema>) {
@@ -94,7 +114,9 @@ export default function SetupForm() {
   }
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log("Form Data:", data);
     createSessionStorage(data);
+    toast("Configuration saved! Redirecting...", { duration: 2000 });
 
     // Redirect to path based environment
     if (import.meta.env.BASE_URL && import.meta.env.BASE_URL !== "/") {
@@ -108,7 +130,7 @@ export default function SetupForm() {
   return (
     <Dialog open={isSetup} onOpenChange={setIsSetup}>
       <DialogPortal>
-        <DialogContent>
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Setup</DialogTitle>
             <DialogDescription>
@@ -122,58 +144,95 @@ export default function SetupForm() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="w-full space-y-2"
               >
-                <FormField
-                  control={form.control}
-                  name="apiKey"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>API Key</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your API key" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        This is your public display name.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="cdnlink"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CDN LINK</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                <div className="grid grid-cols-[1fr_1fr] gap-4">
+                  <FormField
+                    control={form.control}
+                    name="targetApi"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target API</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Target API" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="v1">
+                              Distribution API (v1)
+                            </SelectItem>
+                            <SelectItem value="v2">
+                              Embedded Management API (v2)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Select the target API for your SDK.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="cdnlink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>CDN LINK</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a CDN link" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {typeof window !== "undefined" &&
+                              window.location.hostname === "localhost" && (
+                                <SelectItem value={getLocalEmbeddedAsset()}>
+                                  Custom (Local)
+                                </SelectItem>
+                              )}
+                            <SelectItem value={BASE_LINK("dev")}>
+                              Dev
+                            </SelectItem>
+                            <SelectItem value={BASE_LINK("uat")}>
+                              UAT
+                            </SelectItem>
+                            <SelectItem value={BASE_LINK("prod")}>
+                              PROD
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          This is CDN link for your API key.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="apiKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>API Key</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a CDN link" />
-                          </SelectTrigger>
+                          <Input placeholder="Enter your API key" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          {typeof window !== "undefined" &&
-                            window.location.hostname === "localhost" && (
-                              <SelectItem value={getLocalEmbeddedAsset()}>
-                                Custom (Local)
-                              </SelectItem>
-                            )}
-                          <SelectItem value={BASE_LINK("dev")}>Dev</SelectItem>
-                          <SelectItem value={BASE_LINK("uat")}>UAT</SelectItem>
-                          <SelectItem value={BASE_LINK("prod")}>
-                            PROD
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        This is CDN link for your API key.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormDescription>
+                          This is your API key for the embedded SDK.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="isDebug"
@@ -194,6 +253,73 @@ export default function SetupForm() {
                     </FormItem>
                   )}
                 />
+                <div className="space-y-2 w-full ">
+                  <div className="flex items-center justify-between">
+                    <div className="mb-2 font-medium">Target Attributes</div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => append({ key: "", value: "" })}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Attribute
+                    </Button>
+                  </div>
+                  {fields.length !== 0 && (
+                    <ScrollArea className="h-60  space-y-2">
+                      {fields.map((field, index) => (
+                        <div
+                          key={field.id}
+                          className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end  w-full border p-2 rounded-lg"
+                        >
+                          <FormField
+                            control={form.control}
+                            name={`targetAttributes.${index}.key` as const}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Attribute Name</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter attribute name"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`targetAttributes.${index}.value` as const}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Attribute Value</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter attribute value"
+                                    {...field}
+                                  />
+                                </FormControl>
+
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            type="button"
+                            onClick={() => remove(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </div>
+
                 <Button type="submit">Load</Button>
               </form>
             </Form>

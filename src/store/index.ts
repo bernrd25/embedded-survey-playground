@@ -26,7 +26,7 @@ interface SetupState {
 }
 
 export const useIsSetup = create<SetupState>((set) => ({
-  isSetup: true,
+  isSetup: false,
   setIsSetup: (value: boolean) => set(() => ({ isSetup: value })),
 }));
 
@@ -139,6 +139,7 @@ export type Config = {
   events: EventConfig[];
   person?: PersonConfig;
   attributes?: string;
+  message?: string;
 };
 
 interface EmbeddedInfoState {

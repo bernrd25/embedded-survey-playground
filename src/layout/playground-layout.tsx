@@ -32,6 +32,7 @@ import { Popover, PopoverTrigger } from "../components/Popover";
 import { PopoverContent } from "@radix-ui/react-popover";
 import { Label } from "../components/Label";
 import { extractActiveEventPerPath } from "../lib/extractActiveEventPerPath";
+import { Separator } from "../components/Seperator";
 
 function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -332,8 +333,6 @@ const PlaygroundLayout = () => {
     }
   };
 
-  console.log("info", info);
-
   return (
     <div>
       <Navigation />
@@ -414,7 +413,11 @@ const PlaygroundLayout = () => {
                               ))}
                             </div>
                           )}
+                          <Label className="text-muted-foreground text-xs">
+                            * Based on the current path: {item.message}
+                          </Label>
                         </div>
+                        <Separator className="my-2" />
                       </div>
                     );
                   })}
