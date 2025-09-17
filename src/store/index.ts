@@ -1,14 +1,24 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface ThemeState {
   theme: "theme-light" | "dark" | "system";
   setTheme: (theme: "theme-light" | "dark" | "system") => void;
 }
 
-export const useTheme = create<ThemeState>((set) => ({
-  theme: "system",
-  setTheme: (theme) => set({ theme }),
-}));
+export const useTheme = create<ThemeState>()(
+  persist(
+    (set) => ({
+      theme: "system",
+      setTheme: (theme: "theme-light" | "dark" | "system") =>
+        set(() => ({ theme })),
+    }),
+    {
+      name: "theme-storage", // unique name
+      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+    }
+  )
+);
 
 interface SetupState {
   isSetup: boolean;

@@ -32,7 +32,7 @@ import { Switch } from "./Switch";
 
 const FormSchema = z.object({
   apiKey: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
+    message: "API key must be at least 2 characters.",
   }),
   cdnlink: z.string().min(2, {
     message: "CDN link must be at least 2 characters.",
