@@ -84,7 +84,7 @@ export default function SetupForm() {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     createSessionStorage(data);
-    window.location.href = "/playground";
+    window.location.href = "/embedded-survey-playground/playground";
   }
 
   return (
