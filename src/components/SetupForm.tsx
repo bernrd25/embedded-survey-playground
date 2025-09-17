@@ -95,6 +95,13 @@ export default function SetupForm() {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     createSessionStorage(data);
+
+    // Redirect to path based environment
+    if (import.meta.env.BASE_URL && import.meta.env.BASE_URL !== "/") {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, ""); // Remove trailing slash
+      window.location.href = `${basePath}/playground`;
+      return;
+    }
     window.location.href = "/playground";
   }
 

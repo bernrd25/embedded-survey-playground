@@ -115,7 +115,10 @@ const router = createBrowserRouter([
     path: "*",
     Component: () => <div>404 Not Found</div>,
   },
-]);
+], {
+  basename: import.meta.env.BASE_URL.replace(/\/$/, '') // Remove trailing slash
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RouterProvider router={router} />
