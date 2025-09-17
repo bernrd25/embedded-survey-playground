@@ -303,9 +303,23 @@ const PlaygroundLayout = () => {
       ls.forEach((key) => {
         const value = localStorage.getItem(key);
         if (value) {
-          const JSONvalue = JSON.parse(value);
-
-          temp.push(JSONvalue);
+          try {
+            const JSONvalue = JSON.parse(value);
+            // Only add if it looks like a Config object (has required properties)
+            if (
+              JSONvalue &&
+              typeof JSONvalue === "object" &&
+              JSONvalue.id &&
+              JSONvalue.events
+            ) {
+              temp.push(JSONvalue);
+            }
+          } catch {
+            // Skip items that aren't valid JSON or don't match Config structure
+            console.debug(
+              `Skipping localStorage key "${key}": not valid JSON or Config object`
+            );
+          }
         }
       });
 
