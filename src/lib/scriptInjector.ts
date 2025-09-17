@@ -4,15 +4,16 @@ export function scriptInjector(parsesdItem: {
   isDebug: boolean;
 }): void {
   const isInitialized = sessionStorage.getItem("isInitialized");
-  if (!isInitialized) {
-    const header = document.querySelector("head");
-    const cdnLink = document.createElement("script");
-    cdnLink.src = parsesdItem.cdnlink;
-    cdnLink.async = true;
-    cdnLink.onload = () => {
-      console.log("CDN script loaded successfully.");
 
-      // Inject script snippet into the body after CDN is loaded
+  const header = document.querySelector("head");
+  const cdnLink = document.createElement("script");
+  cdnLink.src = parsesdItem.cdnlink;
+  cdnLink.async = true;
+  cdnLink.onload = () => {
+    console.log("CDN script loaded successfully.");
+
+    // Inject script snippet into the body after CDN is loaded
+    if (!isInitialized) {
       const script = document.createElement("script");
       script.innerHTML = `if (typeof window !== "undefined") {
             const s = CXGaia();
@@ -36,15 +37,17 @@ export function scriptInjector(parsesdItem: {
       };
       document.body.appendChild(script);
       console.log("Script snippet added to the body.");
-    };
-    cdnLink.onerror = () => {
-      console.error("Error loading CDN script.");
-    };
-    if (header) {
-      header.appendChild(cdnLink);
-      console.log("CDN link added to the head.");
-    } else {
-      console.error("Header element not found.");
+      sessionStorage.setItem("isInitialized", "true");
     }
+  };
+
+  cdnLink.onerror = () => {
+    console.error("Error loading CDN script.");
+  };
+  if (header) {
+    header.appendChild(cdnLink);
+    console.log("CDN link added to the head.");
+  } else {
+    console.error("Header element not found.");
   }
 }

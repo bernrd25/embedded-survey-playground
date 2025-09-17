@@ -44,27 +44,38 @@ const BASE_LINK = (env: "dev" | "uat" | "prod") => {
   return `https://concentrixcx.azureedge.net/${env}/react-module/gaia/index.js`;
 };
 
-// so that in production (GitHub Pages under /embedded-survey-playground) it still resolves.
+// Enhanced function to handle both development and production builds
 function getLocalEmbeddedAsset() {
-  const BASE = "/embedded-survey-playground"; // keep in sync with astro.config.mjs base
-  const RELATIVE = "/dist/client/index.js"; // inside public/
-
-  // Optional override via PUBLIC_CUSTOM_ASSET (Vite/Astro convention)
-  let override: string | undefined;
-  try {
-    override =
-      typeof import.meta !== "undefined"
-        ? import.meta?.env?.PUBLIC_CUSTOM_ASSET
-        : undefined;
-  } catch {
-    /* noop */
+  if (typeof window === "undefined") {
+    return "/dist/client/index.js";
   }
-  if (override) return override;
 
-  if (typeof window === "undefined") return `${BASE}${RELATIVE}`; // SSR build phase
+  const { hostname, port, pathname } = window.location;
 
-  const pathHasBase = window.location.pathname.startsWith(`${BASE}`);
-  return pathHasBase ? `${BASE}${RELATIVE}` : RELATIVE; // dev vs prod
+  // Development environment (npm run dev)
+  if (hostname === "localhost" && port === "5173") {
+    return "/public/dist/client/index.js";
+  }
+
+  // Preview environment (npm run preview) - typically port 4173
+  if (hostname === "localhost" && (port === "4173" || port === "5174")) {
+    return "/dist/client/index.js";
+  }
+
+  // General localhost fallback
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    // Try preview path first, fallback to dev path
+    return "/dist/client/index.js";
+  }
+
+  // Production environment (GitHub Pages or other hosting)
+  // Check if we're in a subdirectory deployment (like GitHub Pages)
+  const basePath = pathname.startsWith("/embedded-survey-playground")
+    ? "/embedded-survey-playground"
+    : "";
+
+  // The actual built asset is in dist/dist/client/index.js
+  return `${basePath}/dist/client/index.js`;
 }
 
 export default function SetupForm() {
@@ -84,7 +95,7 @@ export default function SetupForm() {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     createSessionStorage(data);
-    window.location.href = "/embedded-survey-playground/playground";
+    window.location.href = "/playground";
   }
 
   return (
