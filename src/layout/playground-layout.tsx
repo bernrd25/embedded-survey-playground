@@ -20,23 +20,20 @@ import {
   Moon,
   Sun,
   Home,
+  Info,
+  RefreshCcw,
 } from "lucide-react";
 import { Button } from "../components/Button";
 import { MAIN_ROUTES, SURVEY_TEMPLATES, RESOURCES } from "../routes";
-import { create } from "zustand";
+
 import { scriptInjector } from "../lib/scriptInjector";
+import { useEmbeddedInfo, useTheme } from "../store";
+import { Popover, PopoverTrigger } from "../components/Popover";
+import { PopoverContent } from "@radix-ui/react-popover";
+import { Label } from "../components/Label";
+import { extractActiveEventPerPath } from "../lib/extractActiveEventPerPath";
 
-interface ThemeState {
-  theme: "theme-light" | "dark" | "system";
-  setTheme: (theme: "theme-light" | "dark" | "system") => void;
-}
-
-const useTheme = create<ThemeState>((set) => ({
-  theme: "system",
-  setTheme: (theme) => set({ theme }),
-}));
-
-function CoolNavigation() {
+function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -246,6 +243,8 @@ function ListItem({
 const PlaygroundLayout = () => {
   const { theme, setTheme } = useTheme();
 
+  const { info, setInfo } = useEmbeddedInfo();
+
   useEffect(() => {
     const isDarkMode = document.documentElement.classList.contains("dark");
     setTheme(isDarkMode ? "dark" : "theme-light");
@@ -291,12 +290,96 @@ const PlaygroundLayout = () => {
     });
     window.location.href = "/";
   };
+
   return (
     <div>
-      <CoolNavigation />
+      <Navigation />
       <main>
         <Outlet />
       </main>
+      <div className="fixed bottom-2 left-2 md:bottom-4 md:left-4 lg:bottom-8 lg:left-8 z-50">
+        <Popover>
+          <PopoverTrigger onClick={() => setInfo()}>
+            <Info className="w-6 h-6 text-foreground hover:text-primary cursor-pointer" />
+            <span className="sr-only">Info</span>
+          </PopoverTrigger>
+          <PopoverContent className=" min-w-80 max-w-lg  p-4">
+            <div className="grid gap-4  bg-background rounded-lg p-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h4 className="leading-none font-medium">Embedded Info</h4>
+                  <RefreshCcw
+                    className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer"
+                    onClick={() => setInfo()}
+                  />
+                </div>
+
+                <p className="text-muted-foreground text-sm">
+                  Preview of the embedded configuration.
+                </p>
+              </div>
+              <div className="grid gap-2">
+                {info &&
+                  info.map((item, index: number) => {
+                    // Extract active events for the current path
+                    const activeEvents = extractActiveEventPerPath(item);
+                    return (
+                      <div key={index} className="grid gap-2">
+                        <div className="grid grid-cols-2 items-center gap-4">
+                          <Label>Session ID:</Label>
+                          <Label className="truncate">{item.sessionId}</Label>
+                        </div>
+                        <div className="grid grid-cols-2 items-center gap-4">
+                          <Label>Already Display:</Label>
+                          <Label>{item.display ? "Yes" : "No"}</Label>
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label className="font-medium">
+                            Active Events ({activeEvents.length}):
+                          </Label>
+
+                          {activeEvents.length === 0 ? (
+                            <Label className="text-muted-foreground text-xs">
+                              No events active for current path
+                            </Label>
+                          ) : (
+                            <div className="space-y-2">
+                              {activeEvents.map((event, eventIndex) => (
+                                <div
+                                  key={eventIndex}
+                                  className="border rounded p-2 space-y-1"
+                                >
+                                  <div className="flex justify-between items-start">
+                                    <Label className="font-medium text-xs">
+                                      {event.name}
+                                    </Label>
+                                    <Label className="text-xs bg-primary/10 text-primary px-1 rounded">
+                                      {event.trigger}
+                                    </Label>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">
+                                      Mode: {event.mode}
+                                    </Label>
+                                    <Label className="text-xs text-muted-foreground">
+                                      Display: {event.displayPercentage}% |{" "}
+                                      {event.displayDelay}
+                                    </Label>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
       <div className="fixed bottom-2 right-2 md:bottom-4 md:right-4 lg:bottom-8 lg:right-8 z-50 flex space-x-2">
         <Button
           onClick={() =>
