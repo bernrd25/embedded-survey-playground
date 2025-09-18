@@ -339,7 +339,7 @@ const PlaygroundLayout = () => {
       <main>
         <Outlet />
       </main>
-      <div className="fixed bottom-2 left-2 md:bottom-4 md:left-4 lg:bottom-8 lg:left-8 z-50">
+      <div className="fixed left-2 top-12 md:top-16 md:left-4 lg:top-20 lg:left-8 z-50">
         <Popover>
           <PopoverTrigger onClick={() => handleSetInfo()}>
             <Info className="w-6 h-6 text-foreground hover:text-primary cursor-pointer" />
@@ -426,7 +426,7 @@ const PlaygroundLayout = () => {
           </PopoverContent>
         </Popover>
       </div>
-      <div className="fixed bottom-2 right-2 md:bottom-4 md:right-4 lg:bottom-8 lg:right-8 z-50 flex space-x-2">
+      <div className="fixed bottom-2 left-2 md:bottom-4 md:left-4 lg:bottom-8 lg:left-8 z-50 flex space-x-2">
         <Button
           onClick={() =>
             themeStateMachine(theme === "dark" ? "theme-light" : "dark")
