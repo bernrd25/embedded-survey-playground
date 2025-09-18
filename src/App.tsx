@@ -30,7 +30,11 @@ import {
 
 const routeList = () => {
   const routes: string[] = [];
-  const baseUrl = window.location.origin; // Gets protocol + hostname + port
+  let baseUrl = window.location.origin; // Gets protocol + hostname + port
+
+  if (import.meta.env.BASE_URL && import.meta.env.BASE_URL !== "/") {
+    baseUrl += import.meta.env.BASE_URL.replace(/\/$/, "");
+  }
 
   // Add main routes (all are full paths)
   Object.values(MAIN_ROUTES).forEach((path) => {
