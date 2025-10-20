@@ -1,13 +1,22 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import PlaygroundLayout from "./layout/playground-layout";
 
-import { PLAYGROUND_ROUTES, TEMPLATE_ROUTES, RESOURCE_ROUTES } from "./routes";
+import {
+  PLAYGROUND_ROUTES,
+  TEMPLATE_ROUTES,
+  RESOURCE_ROUTES,
+  TRIGGER_ROUTES,
+} from "./routes";
 import EnvironmentComponent from "./components/EnvironmentComponent.tsx";
 import { Toaster } from "./components/Sonner.tsx";
+import { ScrollDepthTest } from "./pages/triggers/ScrollDepthTest";
+import { ClickTriggerTest } from "./pages/triggers/ClickTriggerTest";
+import { ExitIntentTest } from "./pages/triggers/ExitIntentTest";
+import { IdleDetectionTest } from "./pages/triggers/IdleDetectionTest";
+import { PageViewTest } from "./pages/triggers/PageViewTest";
 
 const router = createBrowserRouter(
   [
@@ -47,7 +56,9 @@ const router = createBrowserRouter(
         },
         {
           path: PLAYGROUND_ROUTES.SIMULATION,
-          Component: () => <EnvironmentComponent text="Simulation" />,
+          Component: () => (
+            <EnvironmentComponent className="h-[100vh]" text="Simulation" />
+          ),
         },
         {
           path: PLAYGROUND_ROUTES.EMBEDDED,
@@ -69,7 +80,10 @@ const router = createBrowserRouter(
         {
           path: TEMPLATE_ROUTES.MARKET_RESEARCH,
           Component: () => (
-            <EnvironmentComponent text="Market Research Template" />
+            <EnvironmentComponent
+              className="h-[300vh]"
+              text="Market Research Template"
+            />
           ),
         },
         {
@@ -111,6 +125,44 @@ const router = createBrowserRouter(
           path: RESOURCE_ROUTES.SUPPORT,
           Component: () => <EnvironmentComponent text="Support Center" />,
         },
+        // Trigger test routes
+        {
+          path: TRIGGER_ROUTES.SCROLL_DEPTH,
+          Component: ScrollDepthTest,
+        },
+        {
+          path: TRIGGER_ROUTES.CLICK_TRIGGER,
+          Component: ClickTriggerTest,
+        },
+        {
+          path: TRIGGER_ROUTES.EXIT_INTENT,
+          Component: ExitIntentTest,
+        },
+        {
+          path: TRIGGER_ROUTES.IDLE_DETECTION,
+          Component: IdleDetectionTest,
+        },
+        {
+          path: TRIGGER_ROUTES.PAGE_VIEW,
+          Component: PageViewTest,
+        },
+        // Page View sub-routes for navigation testing
+        {
+          path: `${TRIGGER_ROUTES.PAGE_VIEW}/products`,
+          Component: PageViewTest,
+        },
+        {
+          path: `${TRIGGER_ROUTES.PAGE_VIEW}/about`,
+          Component: PageViewTest,
+        },
+        {
+          path: `${TRIGGER_ROUTES.PAGE_VIEW}/contact`,
+          Component: PageViewTest,
+        },
+        {
+          path: `${TRIGGER_ROUTES.PAGE_VIEW}/pricing`,
+          Component: PageViewTest,
+        },
       ],
     },
     {
@@ -124,8 +176,8 @@ const router = createBrowserRouter(
 );
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  <>
     <Toaster />
     <RouterProvider router={router} />
-  </StrictMode>
+  </>
 );

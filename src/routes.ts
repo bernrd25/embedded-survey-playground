@@ -56,6 +56,56 @@ export const PLAYGROUND_ROUTES = {
   EMBEDDED_FULL: "/playground/embedded",
 } as const;
 
+// Trigger test routes
+export const TRIGGER_ROUTES = {
+  // Relative paths for React Router children
+  SCROLL_DEPTH: "triggers/scroll-depth",
+  CLICK_TRIGGER: "triggers/click-trigger",
+  EXIT_INTENT: "triggers/exit-intent",
+  IDLE_DETECTION: "triggers/idle-detection",
+  PAGE_VIEW: "triggers/page-view",
+  // Full paths for external navigation
+  SCROLL_DEPTH_FULL: "/playground/triggers/scroll-depth",
+  CLICK_TRIGGER_FULL: "/playground/triggers/click-trigger",
+  EXIT_INTENT_FULL: "/playground/triggers/exit-intent",
+  IDLE_DETECTION_FULL: "/playground/triggers/idle-detection",
+  PAGE_VIEW_FULL: "/playground/triggers/page-view",
+} as const;
+
+// Trigger test configuration
+export const TRIGGER_TESTS = [
+  {
+    title: "Scroll Depth",
+    href: TRIGGER_ROUTES.SCROLL_DEPTH,
+    description: "Test scroll-based triggers at different depth percentages",
+    icon: "scroll",
+  },
+  {
+    title: "Click Trigger",
+    href: TRIGGER_ROUTES.CLICK_TRIGGER,
+    description: "Test click-based triggers with CSS selectors",
+    icon: "click",
+  },
+  {
+    title: "Exit Intent",
+    href: TRIGGER_ROUTES.EXIT_INTENT,
+    description: "Test exit intent detection when cursor leaves viewport",
+    icon: "logout",
+  },
+  {
+    title: "Idle Detection",
+    href: TRIGGER_ROUTES.IDLE_DETECTION,
+    description: "Test idle time triggers after user inactivity",
+    icon: "timer",
+  },
+  {
+    title: "Page View",
+    href: TRIGGER_ROUTES.PAGE_VIEW,
+    description: "Test page view triggers on navigation",
+    icon: "eye",
+  },
+] as const;
+
 // Survey template configuration
 export const SURVEY_TEMPLATES = [
   {
@@ -127,6 +177,7 @@ export const ALL_ROUTES = {
   ...TEMPLATE_ROUTES,
   ...RESOURCE_ROUTES,
   ...PLAYGROUND_ROUTES,
+  ...TRIGGER_ROUTES,
 } as const;
 
 // Route validation helper

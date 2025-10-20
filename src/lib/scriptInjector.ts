@@ -5,7 +5,7 @@ export function scriptInjector(parsesdItem: {
   targetAttributes: { key: string; value: string }[];
   targetApi: "v1" | "v2";
 }): void {
-  const isInitialized = sessionStorage.getItem("isInitialized");
+  const isInitialized = false;
 
   const header = document.querySelector("head");
   const cdnLink = document.createElement("script");

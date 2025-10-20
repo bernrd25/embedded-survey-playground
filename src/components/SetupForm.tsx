@@ -90,6 +90,43 @@ function getLocalEmbeddedAsset() {
   return `${basePath}/dist/client/index.js`;
 }
 
+const presetTargetAttributes = {
+  basic: [
+    { key: "userId", value: "12345" },
+    { key: "region", value: "us-west" },
+  ],
+  ecommerce: [
+    { key: "customerId", value: "CUST-67890" },
+    { key: "accountType", value: "premium" },
+    { key: "orderCount", value: "15" },
+    { key: "totalSpent", value: "2499.99" },
+  ],
+  support: [
+    { key: "ticketId", value: "TKT-12345" },
+    { key: "agentId", value: "AGT-789" },
+    { key: "department", value: "technical-support" },
+    { key: "priority", value: "high" },
+  ],
+  healthcare: [
+    { key: "patientId", value: "PAT-54321" },
+    { key: "providerId", value: "DOC-999" },
+    { key: "appointmentType", value: "follow-up" },
+    { key: "insuranceProvider", value: "Blue Cross" },
+  ],
+  financial: [
+    { key: "accountNumber", value: "ACC-98765" },
+    { key: "accountType", value: "checking" },
+    { key: "branchCode", value: "BR-100" },
+    { key: "relationshipManager", value: "RM-456" },
+  ],
+  education: [
+    { key: "studentId", value: "STU-11223" },
+    { key: "courseId", value: "CS-101" },
+    { key: "semester", value: "Fall 2025" },
+    { key: "enrollmentStatus", value: "full-time" },
+  ],
+};
+
 export default function SetupForm() {
   const { isSetup, setIsSetup } = useIsSetup();
 
@@ -256,15 +293,49 @@ export default function SetupForm() {
                 <div className="space-y-2 w-full ">
                   <div className="flex items-center justify-between">
                     <div className="mb-2 font-medium">Target Attributes</div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => append({ key: "", value: "" })}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Attribute
-                    </Button>
+                    <div className="flex gap-2">
+                      <Select
+                        onValueChange={(value) => {
+                          if (value === "clear") {
+                            // Clear all attributes
+                            form.setValue("targetAttributes", []);
+                            return;
+                          }
+                          // Load preset
+                          const preset =
+                            presetTargetAttributes[
+                              value as keyof typeof presetTargetAttributes
+                            ];
+                          if (preset) {
+                            form.setValue("targetAttributes", [...preset]);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Load Preset" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basic">Basic User</SelectItem>
+                          <SelectItem value="ecommerce">E-Commerce</SelectItem>
+                          <SelectItem value="support">
+                            Customer Support
+                          </SelectItem>
+                          <SelectItem value="healthcare">Healthcare</SelectItem>
+                          <SelectItem value="financial">Financial</SelectItem>
+                          <SelectItem value="education">Education</SelectItem>
+                          <SelectItem value="clear">Clear All</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => append({ key: "", value: "" })}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Attribute
+                      </Button>
+                    </div>
                   </div>
                   {fields.length !== 0 && (
                     <ScrollArea className="h-60  space-y-2">
