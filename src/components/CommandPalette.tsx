@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { sdkMonitor } from "../lib/sdkMonitor";
-import { TRIGGER_ROUTES, MAIN_ROUTES, RESOURCE_ROUTES } from "../routes";
+import { TRIGGER_ROUTES, MAIN_ROUTES } from "../routes";
 import { Search, X } from "lucide-react";
 import { cn } from "../lib/utils";
 
