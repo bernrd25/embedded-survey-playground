@@ -2,9 +2,17 @@ import { PixelatedCanvas } from "./components/PixelatedCanvas";
 import SetupForm from "./components/SetupForm";
 import cxlogo from "./assets/cxlogo.png";
 import { Button } from "./components/Button";
-import { Copy, Monitor, Moon, Notebook, Settings2, Sun } from "lucide-react";
-import { useIsSetup, useTheme } from "./store";
+import { Copy, Link2, Moon, Notebook, Settings2, Sun } from "lucide-react";
+import { useIsSetup } from "./store";
+import { useTheme } from "./components/theme-provider";
 import { useEffect } from "react";
+import { toast } from "sonner";
+import {
+  buildShareUrl,
+  decodeSession,
+  getSessionParam,
+  type ShareableConfig,
+} from "./lib/sessionShare";
 import { ShootingStars, StarsBackground } from "./components/ShoutingStars";
 import {
   Sheet,
@@ -67,7 +75,7 @@ const routeList = () => {
   [PLAYGROUND_ROUTES.SIMULATION_FULL, PLAYGROUND_ROUTES.EMBEDDED_FULL].forEach(
     (path) => {
       routes.push(`${baseUrl}${path}`);
-    }
+    },
   );
 
   return routes;
@@ -78,22 +86,25 @@ console.log(routeList());
 function App() {
   const { theme, setTheme } = useTheme();
   const { isSetup, setIsSetup } = useIsSetup();
+
+  // Detect shared session URL param and auto-apply on landing
   useEffect(() => {
-    const isDarkMode = document.documentElement.classList.contains("dark");
-    setTheme(isDarkMode ? "dark" : "theme-light");
+    const param = getSessionParam();
+    if (param) {
+      const config = decodeSession(param);
+      if (config) {
+        sessionStorage.setItem("embeddedsurvey-config", JSON.stringify(config));
+        const basePath = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
+        const goto = new URLSearchParams(window.location.search).get("goto");
+        // Only allow relative internal paths to prevent open redirect
+        const safePath =
+          goto && /^\/[a-zA-Z0-9/_-]*$/.test(goto) ? goto : "/playground";
+        window.location.replace(`${basePath}${safePath}`);
+        return;
+      }
+    }
   }, []);
 
-  useEffect(() => {
-    const isDark =
-      theme === "dark" ||
-      (theme === "system" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.classList[isDark ? "add" : "remove"]("dark");
-  }, [theme]);
-
-  const themeStateMachine = (theme: "theme-light" | "dark" | "system") => {
-    setTheme(theme);
-  };
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-black">
       <ShootingStars trailColor="teal" starColor="teal" />
@@ -180,21 +191,41 @@ function App() {
             </div>
           </SheetContent>
         </Sheet>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const raw = sessionStorage.getItem("embeddedsurvey-config");
+            if (!raw) {
+              toast.warning("No session configured yet.");
+              return;
+            }
+            try {
+              const config = JSON.parse(raw) as ShareableConfig;
+              const url = buildShareUrl(config);
+              navigator.clipboard.writeText(url);
+              toast.success("Shareable URL copied to clipboard!", {
+                description:
+                  "API key is included — share only with trusted team members.",
+                duration: 4000,
+              });
+            } catch {
+              toast.error("Failed to generate share URL.");
+            }
+          }}
+        >
+          <Link2 className="w-4 h-4" />
+        </Button>
         <Button disabled={isSetup} onClick={() => setIsSetup(!isSetup)}>
           <Settings2 className="w-4 h-4" />
         </Button>
         <Button
-          onClick={() =>
-            themeStateMachine(theme === "dark" ? "theme-light" : "dark")
-          }
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6 py-2 transition-all duration-200 "
         >
           {theme === "dark" ? (
             <Sun className="w-4 h-4" />
-          ) : theme === "theme-light" ? (
-            <Moon className="w-4 h-4" />
           ) : (
-            <Monitor className="w-4 h-4" />
+            <Moon className="w-4 h-4" />
           )}
         </Button>
       </div>

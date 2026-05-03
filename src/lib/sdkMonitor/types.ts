@@ -30,6 +30,8 @@ export interface SDKLog {
 
 export interface SDKState {
   isInitialized: boolean;
+  isLoading?: boolean;
+  error?: string;
   apiKey?: string;
   sessionId?: string;
   targetAttributes?: Record<string, string>;
@@ -67,3 +69,7 @@ export interface StorageOperation {
   value?: unknown;
   storageType: "localStorage" | "sessionStorage";
 }
+
+export type MockResponse =
+  | { kind: "response"; status: number; body: unknown; label: string }
+  | { kind: "error"; message: string; label: string };

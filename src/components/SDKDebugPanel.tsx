@@ -5,6 +5,7 @@ import {
   type SDKEventType,
   type APICall,
 } from "../lib/sdkMonitor";
+import { buildCurlCommand } from "../lib/curlBuilder";
 import { Button } from "./Button";
 import {
   X,
@@ -16,6 +17,9 @@ import {
   Minimize2,
   Maximize2,
   Network,
+  Search,
+  Copy,
+  Check,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -24,13 +28,19 @@ type TabType = "console" | "network";
 interface SDKDebugPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  inline?: boolean;
 }
 
-export const SDKDebugPanel = ({ isOpen, onClose }: SDKDebugPanelProps) => {
+export const SDKDebugPanel = ({
+  isOpen,
+  onClose,
+  inline = false,
+}: SDKDebugPanelProps) => {
   const [logs, setLogs] = useState<SDKLog[]>([]);
   const [apiCalls, setApiCalls] = useState<APICall[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>("console");
   const [filter, setFilter] = useState<SDKEventType | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -59,8 +69,26 @@ export const SDKDebugPanel = ({ isOpen, onClose }: SDKDebugPanelProps) => {
     }
   }, [logs, autoScroll]);
 
-  const filteredLogs =
-    filter === "all" ? logs : logs.filter((log) => log.eventType === filter);
+  const q = searchQuery.toLowerCase();
+
+  const filteredLogs = logs
+    .filter((log) => filter === "all" || log.eventType === filter)
+    .filter(
+      (log) =>
+        !q ||
+        log.message.toLowerCase().includes(q) ||
+        JSON.stringify(log.details ?? "")
+          .toLowerCase()
+          .includes(q),
+    );
+
+  const filteredApiCalls = apiCalls.filter(
+    (call) =>
+      !q ||
+      call.url.toLowerCase().includes(q) ||
+      call.method.toLowerCase().includes(q) ||
+      String(call.status ?? "").includes(q),
+  );
 
   const handleClear = () => {
     sdkMonitor.clearLogs();
@@ -79,77 +107,91 @@ export const SDKDebugPanel = ({ isOpen, onClose }: SDKDebugPanelProps) => {
     URL.revokeObjectURL(url);
   };
 
-  if (!isOpen) return null;
+  if (!inline && !isOpen) return null;
 
   return (
     <div
       className={cn(
-        "fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-background border-r border-t border-b border-border shadow-2xl transition-all duration-300",
-        isMinimized ? "w-12 h-48" : "w-full md:w-[600px] lg:w-[800px] h-[700px]"
+        inline
+          ? "flex flex-col h-full bg-background"
+          : cn(
+              "fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-background border-r border-t border-b border-border shadow-2xl transition-all duration-300",
+              isMinimized
+                ? "w-12 h-48"
+                : "w-full md:w-[600px] lg:w-[800px] h-[700px]",
+            ),
       )}
     >
-      {/* Header */}
-      <div
-        className={cn(
-          "flex items-center justify-between border-b border-border bg-muted/30",
-          isMinimized ? "h-full flex-col py-3 px-0" : "p-3 flex-row"
-        )}
-      >
-        {isMinimized ? (
-          // Minimized vertical tab
-          <>
-            <div className="flex flex-col items-center gap-3 flex-1 justify-center">
-              <Terminal className="w-4 h-4 text-primary" />
-              <div className="flex flex-col items-center gap-1">
+      {/* Header — hidden in inline mode */}
+      {!inline && (
+        <div
+          className={cn(
+            "flex items-center justify-between border-b border-border bg-muted/30",
+            isMinimized ? "h-full flex-col py-3 px-0" : "p-3 flex-row",
+          )}
+        >
+          {isMinimized ? (
+            // Minimized vertical tab
+            <>
+              <div className="flex flex-col items-center gap-3 flex-1 justify-center">
+                <Terminal className="w-4 h-4 text-primary" />
+                <div className="flex flex-col items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsMinimized(false)}
+                    title="Maximize"
+                    className="p-1"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClose}
+                    title="Close"
+                    className="p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            // Full header
+            <>
+              <div className="flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-primary" />
+                <h3 className="font-semibold text-sm">SDK Debug Console</h3>
+                <span className="text-xs text-muted-foreground">
+                  ({filteredLogs.length} logs | {filteredApiCalls.length}{" "}
+                  network)
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setIsMinimized(false)}
-                  title="Maximize"
-                  className="p-1"
+                  onClick={() => setIsMinimized(true)}
+                  title="Minimize"
                 >
-                  <Maximize2 className="w-4 h-4" />
+                  <Minimize2 className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onClose}
                   title="Close"
-                  className="p-1"
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-            </div>
-          </>
-        ) : (
-          // Full header
-          <>
-            <div className="flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-primary" />
-              <h3 className="font-semibold text-sm">SDK Debug Console</h3>
-              <span className="text-xs text-muted-foreground">
-                ({filteredLogs.length} logs | {apiCalls.length} network)
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMinimized(true)}
-                title="Minimize"
-              >
-                <Minimize2 className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onClose} title="Close">
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      )}
 
-      {!isMinimized && (
+      {(!isMinimized || inline) && (
         <>
           {/* Tabs */}
           <div className="flex border-b border-border bg-muted/10">
@@ -159,7 +201,7 @@ export const SDKDebugPanel = ({ isOpen, onClose }: SDKDebugPanelProps) => {
                 "flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-colors border-b-2",
                 activeTab === "console"
                   ? "border-primary text-primary bg-background"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30",
               )}
             >
               <Terminal className="w-3.5 h-3.5" />
@@ -174,19 +216,31 @@ export const SDKDebugPanel = ({ isOpen, onClose }: SDKDebugPanelProps) => {
                 "flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-colors border-b-2",
                 activeTab === "network"
                   ? "border-primary text-primary bg-background"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30",
               )}
             >
               <Network className="w-3.5 h-3.5" />
               Network
               <span className="ml-1 px-1.5 py-0.5 rounded-full bg-muted text-[10px]">
-                {apiCalls.length}
+                {filteredApiCalls.length}
               </span>
             </button>
           </div>
 
           {/* Toolbar */}
           <div className="flex items-center gap-2 p-2 border-b border-border bg-muted/10">
+            {/* Search */}
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-6 pr-2 py-1 text-xs rounded border border-border bg-background"
+              />
+            </div>
+
             {activeTab === "console" && (
               <select
                 value={filter}
@@ -241,7 +295,10 @@ export const SDKDebugPanel = ({ isOpen, onClose }: SDKDebugPanelProps) => {
           {/* Content Area */}
           <div
             ref={scrollRef}
-            className="h-[calc(100%-10rem)] overflow-y-auto font-mono text-xs p-2 bg-slate-950 text-slate-100"
+            className={cn(
+              "overflow-y-auto font-mono text-xs p-2 bg-slate-950 text-slate-100",
+              inline ? "flex-1" : "h-[calc(100%-10rem)]",
+            )}
           >
             {activeTab === "console" ? (
               // Console Logs
@@ -257,13 +314,13 @@ export const SDKDebugPanel = ({ isOpen, onClose }: SDKDebugPanelProps) => {
                 </div>
               )
             ) : // Network Tab
-            apiCalls.length === 0 ? (
+            filteredApiCalls.length === 0 ? (
               <div className="text-center text-slate-400 py-8">
                 No network requests yet. API calls will appear here.
               </div>
             ) : (
               <div className="space-y-2">
-                {apiCalls.map((call) => (
+                {filteredApiCalls.map((call) => (
                   <NetworkEntry key={call.id} call={call} />
                 ))}
               </div>
@@ -327,7 +384,7 @@ const LogEntry = ({ log }: { log: SDKLog }) => {
         <span
           className={cn(
             "px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase min-w-[80px] text-center",
-            eventTypeColors[log.eventType]
+            eventTypeColors[log.eventType],
           )}
         >
           {log.eventType}
@@ -351,6 +408,7 @@ const LogEntry = ({ log }: { log: SDKLog }) => {
 
 const NetworkEntry = ({ call }: { call: APICall }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [curlCopied, setCurlCopied] = useState(false);
 
   const time = new Date(call.timestamp).toLocaleTimeString("en-US", {
     hour12: false,
@@ -403,7 +461,7 @@ const NetworkEntry = ({ call }: { call: APICall }) => {
         <span
           className={cn(
             "px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase min-w-[60px] text-center",
-            getMethodColor(call.method)
+            getMethodColor(call.method),
           )}
         >
           {call.method}
@@ -411,7 +469,7 @@ const NetworkEntry = ({ call }: { call: APICall }) => {
         <span
           className={cn(
             "px-1.5 py-0.5 rounded text-[10px] font-mono min-w-[40px] text-center",
-            getStatusColor(call.status)
+            getStatusColor(call.status),
           )}
         >
           {call.status || "..."}
@@ -424,6 +482,22 @@ const NetworkEntry = ({ call }: { call: APICall }) => {
             {call.duration}ms
           </span>
         )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(buildCurlCommand(call));
+            setCurlCopied(true);
+            setTimeout(() => setCurlCopied(false), 2000);
+          }}
+          className="text-slate-500 hover:text-slate-300 ml-1"
+          title="Copy as cURL"
+        >
+          {curlCopied ? (
+            <Check className="w-3 h-3 text-green-400" />
+          ) : (
+            <Copy className="w-3 h-3" />
+          )}
+        </button>
       </div>
 
       {/* Expanded Details */}
@@ -487,6 +561,15 @@ const NetworkEntry = ({ call }: { call: APICall }) => {
               </div>
             )}
           </>
+
+          <div>
+            <span className="text-slate-500">cURL:</span>
+            <div className="mt-1 p-1.5 bg-slate-950 rounded border border-slate-800 text-slate-300 overflow-x-auto">
+              <pre className="whitespace-pre-wrap">
+                {buildCurlCommand(call)}
+              </pre>
+            </div>
+          </div>
         </div>
       )}
     </div>
