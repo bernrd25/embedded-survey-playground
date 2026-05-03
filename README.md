@@ -1,69 +1,100 @@
-# React + TypeScript + Vite
+# Embedded Survey Playground
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A local developer tool for testing and debugging the **ConcentrixCX Embedded Survey SDK** across different environments, configurations, and trigger scenarios.
 
-Currently, two official plugins are available:
+Live: [bernrd25.github.io/embedded-survey-playground](https://bernrd25.github.io/embedded-survey-playground/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev        # dev server at http://localhost:5173
+npm run build      # production build
+npm run preview    # preview production build locally
+npm run deploy     # build + publish to GitHub Pages
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Setup
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+On first load, a **SDK Setup** dialog appears. Fill in:
+
+| Field | Description |
+|---|---|
+| **Target API** | `Distribution API (v1)` or `Embedded Management API (v2)` |
+| **Environment** | LOCAL / Dev / UAT / PROD — sets the CDN link automatically |
+| **API Key** | Your SDK API key (stored in `localStorage`) |
+| **Debug Mode** | Enables verbose SDK logging in the browser console |
+| **Target Attributes** | Key/value pairs passed to the SDK (userId, region, etc.) |
+
+Config is persisted to `localStorage` and restored on reload. Use **Profiles** to save and switch between multiple configurations. The **JSON** button lets you import/export the full config as JSON.
+
+---
+
+## Advanced Setup
+
+The collapsible **Advanced Setup** panel (right column of the dialog) lets you open multiple sessions alongside the main playground tab when you click **Launch Playground**.
+
+| Setting | Description |
+|---|---|
+| **Mode** | `Tabs` — new browser tabs sharing sessionStorage; `Windows` — sized popup windows; `Isolated` — independent storage per tab via URL param |
+| **Target page** | Which playground route the extra sessions open to |
+| **Count** | Number of extra sessions to open (0 = none, main tab only) |
+| **Per-tab overrides** | Merge additional attributes on top of base config for each extra session |
+
+Setting count to `0` (default) launches only the current tab with no extras.
+
+---
+
+## Playground Pages
+
+| Route | Description |
+|---|---|
+| `/playground` | Main SDK sandbox |
+| `/playground/dashboard` | Overview dashboard |
+| `/playground/getting-started` | Onboarding guide |
+| `/playground/templates/*` | Pre-built survey templates (Customer Feedback, Employee Survey, NPS, etc.) |
+| `/playground/simulation` | Simulated embed environment |
+| `/playground/embedded` | Full embedded mode |
+
+### Trigger Tests
+
+| Route | Description |
+|---|---|
+| `/playground/triggers/scroll-depth` | Fire survey at scroll depth % |
+| `/playground/triggers/click-trigger` | Fire survey on element click |
+| `/playground/triggers/exit-intent` | Fire survey on exit intent |
+| `/playground/triggers/idle-detection` | Fire survey after user is idle |
+| `/playground/triggers/page-view` | Fire survey on page view |
+
+---
+
+## Developer Tools
+
+- **SDK Debug Panel** — real-time event log, SDK health badge, and config inspector
+- **DevTools Drawer** — collapsible drawer with trigger event timeline and config diff
+- **Command Palette** — quick navigation (`⌘K`)
+- **Session Manager** — inspect and manage active SDK sessions
+- **Error Simulator** — trigger SDK error states for testing
+
+---
+
+## Sharing a Config
+
+The **Share** button (top bar) copies a `?session=` URL to clipboard. Opening that URL seeds sessionStorage automatically and redirects to the correct route — useful for sharing exact SDK states with teammates.
+
+---
+
+## Tech Stack
+
+- React 19 + TypeScript + Vite
+- Tailwind CSS v4
+- Radix UI primitives
+- React Hook Form + Zod
+- Zustand
+- React Router v7
+- Sonner (toasts)
+- Lucide icons
