@@ -9,6 +9,7 @@ import type {
   SDKEventType,
   APICall,
   SDKState,
+  MockResponse,
 } from "./types";
 
 type LogSubscriber = (log: SDKLog) => void;
@@ -18,6 +19,7 @@ export class SDKMonitor {
   private static instance: SDKMonitor;
   private logs: SDKLog[] = [];
   private apiCalls: APICall[] = [];
+  private mockQueue: MockResponse[] = [];
   private state: SDKState = {
     isInitialized: false,
     debugMode: false,
@@ -26,6 +28,9 @@ export class SDKMonitor {
   private logSubscribers: Set<LogSubscriber> = new Set();
   private stateSubscribers: Set<StateSubscriber> = new Set();
   private isIntercepting = false;
+
+  private static readonly LOGS_KEY = "_sdk_monitor_logs";
+  private static readonly API_KEY = "_sdk_monitor_api_calls";
 
   // Store original console methods
   private originalConsole = {
@@ -51,6 +56,7 @@ export class SDKMonitor {
   startMonitoring(): void {
     if (this.isIntercepting) return;
 
+    this.loadPersistedLogs();
     this.isIntercepting = true;
     this.interceptConsole();
     this.interceptFetch();
@@ -62,6 +68,32 @@ export class SDKMonitor {
       message: "🎯 SDK Monitor started",
       details: { timestamp: new Date().toISOString() },
     });
+  }
+
+  private loadPersistedLogs(): void {
+    try {
+      const storedLogs = sessionStorage.getItem(SDKMonitor.LOGS_KEY);
+      if (storedLogs) this.logs = JSON.parse(storedLogs);
+      const storedApiCalls = sessionStorage.getItem(SDKMonitor.API_KEY);
+      if (storedApiCalls) this.apiCalls = JSON.parse(storedApiCalls);
+    } catch {
+      // ignore - sessionStorage unavailable or corrupt
+    }
+  }
+
+  private persistLogs(): void {
+    try {
+      sessionStorage.setItem(
+        SDKMonitor.LOGS_KEY,
+        JSON.stringify(this.logs.slice(-200)),
+      );
+      sessionStorage.setItem(
+        SDKMonitor.API_KEY,
+        JSON.stringify(this.apiCalls.slice(-50)),
+      );
+    } catch {
+      // sessionStorage full or unavailable
+    }
   }
 
   /**
@@ -142,7 +174,7 @@ export class SDKMonitor {
    */
   private parseGaiaLog(
     level: SDKLogLevel,
-    args: unknown[]
+    args: unknown[],
   ): Omit<SDKLog, "id" | "timestamp"> {
     const message = String(args[0]);
     const emoji = this.extractEmoji(message);
@@ -230,6 +262,37 @@ export class SDKMonitor {
         message: `API Call: ${apiCall.method} ${urlString}`,
         details: apiCall,
       });
+
+      // Check mock queue before real fetch
+      if (this.mockQueue.length > 0) {
+        const mock = this.mockQueue.shift()!;
+        const duration = Date.now() - startTime;
+        apiCall.duration = duration;
+
+        if (mock.kind === "error") {
+          apiCall.error = mock.message;
+          this.addLog({
+            level: "error",
+            eventType: "error",
+            message: `[MOCKED] Network Error: ${mock.message}`,
+            details: { ...apiCall, mocked: true },
+          });
+          throw new TypeError(mock.message);
+        }
+
+        apiCall.status = mock.status;
+        apiCall.response = mock.body;
+        this.addLog({
+          level: mock.status >= 400 ? "warn" : "info",
+          eventType: "api_response",
+          message: `[MOCKED] Response: ${mock.status} - ${mock.label} (${duration}ms)`,
+          details: { ...apiCall, mocked: true },
+        });
+        return new Response(JSON.stringify(mock.body), {
+          status: mock.status,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
 
       try {
         const response = await originalFetch.apply(window, args);
@@ -360,6 +423,7 @@ export class SDKMonitor {
 
     // Notify subscribers
     this.logSubscribers.forEach((subscriber) => subscriber(log));
+    this.persistLogs();
   }
 
   /**
@@ -420,11 +484,38 @@ export class SDKMonitor {
   clearLogs(): void {
     this.logs = [];
     this.apiCalls = [];
+    try {
+      sessionStorage.removeItem(SDKMonitor.LOGS_KEY);
+      sessionStorage.removeItem(SDKMonitor.API_KEY);
+    } catch {
+      /* ignore */
+    }
     this.addLog({
       level: "info",
       eventType: "general",
       message: "🗑️ Logs cleared",
     });
+  }
+
+  /**
+   * Queue a mock response for the next Gaia API call
+   */
+  queueMock(mock: MockResponse): void {
+    this.mockQueue.push(mock);
+  }
+
+  /**
+   * Get number of queued mocks
+   */
+  getMockQueueLength(): number {
+    return this.mockQueue.length;
+  }
+
+  /**
+   * Clear all queued mocks
+   */
+  clearMocks(): void {
+    this.mockQueue = [];
   }
 
   /**
@@ -439,7 +530,7 @@ export class SDKMonitor {
         exportedAt: new Date().toISOString(),
       },
       null,
-      2
+      2,
     );
   }
 

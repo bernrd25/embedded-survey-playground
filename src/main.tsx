@@ -3,6 +3,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import PlaygroundLayout from "./layout/playground-layout";
+import { ThemeProvider } from "./components/theme-provider";
 
 import {
   PLAYGROUND_ROUTES,
@@ -17,6 +18,7 @@ import { ClickTriggerTest } from "./pages/triggers/ClickTriggerTest";
 import { ExitIntentTest } from "./pages/triggers/ExitIntentTest";
 import { IdleDetectionTest } from "./pages/triggers/IdleDetectionTest";
 import { PageViewTest } from "./pages/triggers/PageViewTest";
+import { GettingStarted } from "./pages/GettingStarted";
 
 const router = createBrowserRouter(
   [
@@ -52,7 +54,7 @@ const router = createBrowserRouter(
         },
         {
           path: "getting-started",
-          Component: () => <EnvironmentComponent text="Getting Started" />,
+          Component: GettingStarted,
         },
         {
           path: PLAYGROUND_ROUTES.SIMULATION,
@@ -163,6 +165,7 @@ const router = createBrowserRouter(
           path: `${TRIGGER_ROUTES.PAGE_VIEW}/pricing`,
           Component: PageViewTest,
         },
+        // Tooling pages are now in the DevTools Drawer — no routes needed
       ],
     },
     {
@@ -172,12 +175,12 @@ const router = createBrowserRouter(
   ],
   {
     basename: import.meta.env.BASE_URL.replace(/\/$/, ""), // Remove trailing slash
-  }
+  },
 );
 
 createRoot(document.getElementById("root")!).render(
-  <>
+  <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
     <Toaster />
     <RouterProvider router={router} />
-  </>
+  </ThemeProvider>,
 );

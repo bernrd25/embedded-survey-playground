@@ -183,7 +183,7 @@ export const ALL_ROUTES = {
 // Route validation helper
 export const isValidRoute = (path: string): boolean => {
   return Object.values(ALL_ROUTES).includes(
-    path as (typeof ALL_ROUTES)[keyof typeof ALL_ROUTES]
+    path as (typeof ALL_ROUTES)[keyof typeof ALL_ROUTES],
   );
 };
 

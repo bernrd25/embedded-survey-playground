@@ -1,3 +1,5 @@
+import { sdkMonitor } from "./sdkMonitor";
+
 export function scriptInjector(parsesdItem: {
   cdnlink: string;
   apiKey: string;
@@ -6,6 +8,12 @@ export function scriptInjector(parsesdItem: {
   targetApi: "v1" | "v2";
 }): void {
   const isInitialized = false;
+
+  sdkMonitor.updateState({
+    isLoading: true,
+    isInitialized: false,
+    error: undefined,
+  });
 
   const header = document.querySelector("head");
   const cdnLink = document.createElement("script");
@@ -16,10 +24,13 @@ export function scriptInjector(parsesdItem: {
 
     let templateAttributes = {};
     if (parsesdItem.targetAttributes.length > 0) {
-      templateAttributes = parsesdItem.targetAttributes.reduce((acc, curr) => {
-        acc[curr.key] = curr.value;
-        return acc;
-      }, {} as { [key: string]: string });
+      templateAttributes = parsesdItem.targetAttributes.reduce(
+        (acc, curr) => {
+          acc[curr.key] = curr.value;
+          return acc;
+        },
+        {} as { [key: string]: string },
+      );
 
       console.log("Template attributes set:", templateAttributes);
     }
@@ -64,9 +75,19 @@ export function scriptInjector(parsesdItem: {
       script.async = true;
       script.onload = () => {
         console.log("Script loaded successfully.");
+        sdkMonitor.updateState({
+          isInitialized: true,
+          isLoading: false,
+          error: undefined,
+        });
       };
       script.onerror = () => {
         console.error("Error loading script.");
+        sdkMonitor.updateState({
+          isInitialized: false,
+          isLoading: false,
+          error: "SDK init script failed to load",
+        });
       };
       document.body.appendChild(script);
       console.log("Script snippet added to the body.");
@@ -76,6 +97,11 @@ export function scriptInjector(parsesdItem: {
 
   cdnLink.onerror = () => {
     console.error("Error loading CDN script.");
+    sdkMonitor.updateState({
+      isInitialized: false,
+      isLoading: false,
+      error: "CDN script failed to load",
+    });
   };
   if (header) {
     header.appendChild(cdnLink);
